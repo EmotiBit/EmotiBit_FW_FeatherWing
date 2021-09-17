@@ -519,6 +519,20 @@ int8_t EmotiBitWiFi::processTimeSync(String &syncPackets, uint16_t &syncPacketCo
 	// ToDo: Consider whether time syncing should be performed on the advertising channel
 	if (_isConnected)
 	{
+		String syncMessage;
+		EmotiBitPacket::Header header;
+		int8_t status;
+		int16_t dataStartChar;
+
+		//makes sure no old messages are in the read buffer
+		status = readUdp(_dataCxn, syncMessage);
+		while (status == SUCCESS) {
+			dataStartChar = EmotiBitPacket::getHeader(syncMessage, header);
+			syncPackets += EmotiBitPacket::createPacket(header.typeTag, syncPacketCounter++,
+				syncMessage.substring(dataStartChar, syncMessage.length() - 1), header.dataLength);
+			status = readUdp(_dataCxn, syncMessage);
+		}
+
 		int16_t rdPacketNumber = syncPacketCounter;
 
 		String payload;
@@ -533,10 +547,6 @@ int8_t EmotiBitWiFi::processTimeSync(String &syncPackets, uint16_t &syncPacketCo
 
 		uint32_t syncWaitTimer = millis();
 
-		String syncMessage;
-		EmotiBitPacket::Header header;
-		int8_t status;
-		int16_t dataStartChar;
 		while (millis() - syncWaitTimer < MAX_SYNC_WAIT_INTERVAL)
 		{
 			status = readUdp(_dataCxn, syncMessage);
