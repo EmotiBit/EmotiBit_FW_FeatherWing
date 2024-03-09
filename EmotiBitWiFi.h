@@ -167,4 +167,10 @@ public:
 	   @return true is enterprise network is listed, else false
 	 */
 	bool isEnterpriseNetworkListed();
+
+	/*!
+	 * @brief Returns max number of allowed credentials in EmotiBitWiFi
+	 * @return NAX_CREDENTIAL
+	 */
+	static uint8_t getMaxNumCredentialAllowed();
 };

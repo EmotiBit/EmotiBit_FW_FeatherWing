@@ -1,4 +1,5 @@
 #include "EmotiBit.h"
+#include "EmotiBitSerial.h"
 #include <math.h>
 
 //FlashStorage(samdFlashStorage, SamdStorageAdcValues);
@@ -130,6 +131,8 @@ uint8_t EmotiBit::setup(String firmwareVariant)
 	Serial.println(firmware_version);
 	Serial.print("firmware_variant: ");
 	Serial.println(firmware_variant);
+	
+	// Wait for possible factory test init prompt
 	while (!Serial.available() && millis() - now < 2000)
 	{
 	}
@@ -137,11 +140,7 @@ uint8_t EmotiBit::setup(String firmwareVariant)
 	{
 		char input;
 		input = Serial.read();
-		if (input == 'R')
-		{
-			restartMcu();
-		}
-		else if (input == EmotiBitFactoryTest::INIT_FACTORY_TEST)
+		if (input == EmotiBitFactoryTest::INIT_FACTORY_TEST)
 		{
 			uint32_t waitStarForBarcode = millis();
 			testingMode = TestingMode::FACTORY_TEST;
@@ -445,6 +444,10 @@ uint8_t EmotiBit::setup(String firmwareVariant)
 		}
 	}
 	now = millis();
+	
+	// prompt for serial input
+	Serial.println("Enter C to enter WiFi config edit mode (Add/ Delete WiFi creds)");
+
 	while (!Serial.available() && millis() - now < 2000)
 	{
 	}
@@ -472,10 +475,25 @@ uint8_t EmotiBit::setup(String firmwareVariant)
 			}
 #endif
 		}
-		else
+		else if (input == 'C')
+		{
+			Serial.println("Wifi Credential edit mode");
+			setupSdCard(false);
+			// ToDo: Find a better name that highlights "updating through Serial".
+			_emotibitConfigManager.updateWiFiCredentials(firmware_version, _configFilename, EmotiBitVersionController::SD_CARD_CHIP_SEL_PIN, EmotiBitWiFi::getMaxNumCredentialAllowed());
+		}
+		else if (input == 'D')
 		{
 			_debugMode = true;
 			Serial.println("\nENTERING DEBUG MODE\n");
+		}
+		else if (input == 'R')
+		{
+			restartMcu();
+		}
+		else
+		{
+			Serial.println("invalid serial input");
 		}
 
 	}
@@ -1167,8 +1185,8 @@ uint8_t EmotiBit::setup(String firmwareVariant)
 	return 0;
 } // Setup
 
-
-void EmotiBit::setupFailed(const String failureMode, int buttonPin)
+// ToDo: we may need to create "fail states" to control activating parts of this function. Adding parameters in function signature does not scale
+void EmotiBit::setupFailed(const String failureMode, int buttonPin, bool configFileError)
 {
 	if (buttonPin > -1)
 	{
@@ -1199,10 +1217,26 @@ void EmotiBit::setupFailed(const String failureMode, int buttonPin)
 		{
 			Serial.println("Setup failed: " + failureMode);
 			timeSinceLastPrint = millis();
+			if (configFileError)
+			{
+				Serial.println("Press \"C\" to add/update cofig file.");
+			}
 		}
+		if (configFileError)
+		{
+			if (Serial.available() >= 0)
+			{
+				char c = Serial.read();
+				if (c == 'C') 
+				{
+					_emotibitConfigManager.updateWiFiCredentials(firmware_version, _configFilename, EmotiBitVersionController::SD_CARD_CHIP_SEL_PIN, EmotiBitWiFi::getMaxNumCredentialAllowed());
+				}
+			}
+		}
+
 	}
 }
-bool EmotiBit::setupSdCard()
+bool EmotiBit::setupSdCard(bool loadConfig)
 {
 
 	Serial.print("\nInitializing SD card...");
@@ -1259,16 +1293,19 @@ bool EmotiBit::setupSdCard()
 #endif
 
 	}
-	Serial.print(F("\nLoading configuration file: "));
-	Serial.println(_configFilename);
-	if (!loadConfigFile(_configFilename)) {
-		Serial.println("SD card configuration file parsing failed.");
-		Serial.println("Create a file 'config.txt' with the following JSON:");
-		Serial.println("{\"WifiCredentials\": [{\"ssid\":\"SSSS\",\"password\" : \"PPPP\"}]}");
-		// ToDo: verify if we need a separate case for FACTORY_TEST. We should always have a config file, since FACTORY TEST is a controlled environment
-		setupFailed("Config file not found");
+	if(loadConfig)
+	{
+		// proceed to parse config file
+		Serial.print(F("\nLoading configuration file: "));
+		Serial.println(_configFilename);
+		if (!loadConfigFile(_configFilename)) {
+			Serial.println("SD card configuration file parsing failed.");
+			Serial.println("Create a file 'config.txt' with the following JSON:");
+			Serial.println("{\"WifiCredentials\": [{\"ssid\":\"SSSS\",\"password\" : \"PPPP\"}]}");
+			// ToDo: verify if we need a separate case for FACTORY_TEST. We should always have a config file, since FACTORY TEST is a controlled environment
+			setupFailed("Config file not found", -1, true);
+		}
 	}
-
 	return true;
 
 }
@@ -3500,7 +3537,7 @@ bool EmotiBit::loadConfigFile(const String &filename) {
 
 	if (error) {
 		Serial.println(F("Failed to parse config file"));
-		setupFailed("Failed to parse Config file contents");
+		setupFailed("Failed to parse Config file contents", -1, true);
 		return false;
 	}
 

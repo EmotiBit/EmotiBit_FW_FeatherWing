@@ -860,3 +860,8 @@ bool EmotiBitWiFi::isEnterpriseNetworkListed()
 	}
 	return false;
 }
+
+uint8_t EmotiBitWiFi::getMaxNumCredentialAllowed()
+{
+	return MAX_CREDENTIALS;
+}
