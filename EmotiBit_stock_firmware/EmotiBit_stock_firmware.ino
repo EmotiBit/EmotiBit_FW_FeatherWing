@@ -52,8 +52,10 @@ void setup()
 void loop()
 {
 	//Serial.println("emotibit.update()");
-	emotibit.update();
-
+	//emotibit.update();
+	
+	// gets run when acquisitoin gives a delay
+	// ToDo: assess time slice given to this task once ported to 2-core topology
 	size_t dataAvailable = emotibit.readData(EmotiBit::DataType::PPG_GREEN, &data[0], dataSize);
 	if (dataAvailable > 0)
 	{
@@ -70,4 +72,5 @@ void loop()
 			}
 		}
 	}
+	
 }
