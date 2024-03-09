@@ -36,6 +36,7 @@
 #include "EmotiBitNvmController.h"
 #include "heartRate.h"
 #include "EmotiBitConfigManager.h"
+#include "FileTransferManager.h"
 
 class EmotiBit {
   
@@ -51,7 +52,7 @@ public:
 
 
 
-  String firmware_version = "1.9.0.feat-sdCardWiFiCredentials.16";
+  String firmware_version = "1.9.0.feat-sdCardWiFiCredentials.16.feat-FtpServer.1";
 
 
 
@@ -282,6 +283,7 @@ public:
 	EmotiBitEda emotibitEda;
 	EmotiBitNvmController _emotibitNvmController;
 	EmotiBitConfigManager _emotibitConfigManager;
+	FileTransferManager _fileTransferManager;
 
 	int _emotiBitSystemConstants[(int)SystemConstants::length];
 	float adcRes;

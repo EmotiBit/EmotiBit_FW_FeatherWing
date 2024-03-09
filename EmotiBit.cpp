@@ -995,6 +995,13 @@ uint8_t EmotiBit::setup(String firmwareVariant)
 		EmotiBitFactoryTest::updateOutputString(factoryTestSerialOutput, EmotiBitFactoryTest::TypeTag::WIFI, EmotiBitFactoryTest::TypeTag::TEST_PASS);
 	}
 	Serial.println(" WiFi setup Completed");
+	Serial.println("Setting up FTP");
+	Serial.println("Setting Protocol");
+  	_fileTransferManager.setProtocol(FileTransferManager::Protocol::FTP);
+  	Serial.println("Setting Auth");
+  	_fileTransferManager.setFtpAuth("ftp", "ftp");
+  	Serial.println("Setting Mode");
+  	_fileTransferManager.setMode(FileTransferManager::Mode::FILE_TRANSFER);
 
 	setPowerMode(PowerMode::NORMAL_POWER);
 	typeTags[(uint8_t)EmotiBit::DataType::EDA] = EmotiBitPacket::TypeTag::EDA;
@@ -1644,7 +1651,36 @@ uint8_t EmotiBit::update()
 		static uint16_t serialPrevAvailable = Serial.available();
 		if (Serial.available() > serialPrevAvailable)
 		{
-			printEmotiBitInfo();
+			if(Serial.read() == 'F')
+			{
+#ifdef ARDUINO_FEATHER_ESP32
+				if(!_sdWrite) // if not writing to SD card
+				{
+					// Stop ISR
+					timerStop(timer);
+					// turn OFF leds
+					// ToDo: Move this out of the #ifdef block. This behavior should be consistant across all Feathers.
+					led.setLED(uint8_t(EmotiBit::Led::RED), false);
+					led.setLED(uint8_t(EmotiBit::Led::BLUE), false);
+					led.setLED(uint8_t(EmotiBit::Led::YELLOW), false);
+					led.send();
+					// ToDo: Consider is this should be implemented outside the #ifdef block. Should FileTransferManager handle the MCU specific stuff?
+					_fileTransferManager.handleTransfer();
+				}
+				else
+				{
+					Serial.println("Recording in progess. Cannot start FTP server.");
+					Serial.println("Please end recording and try again");
+				}
+#else
+				Serial.println("FTP server is only supported on ESP32 boards");
+#endif
+
+			}
+			else
+			{
+				printEmotiBitInfo();
+			}
 		}
 		serialPrevAvailable = Serial.available();
 		
