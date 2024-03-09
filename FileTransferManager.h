@@ -42,6 +42,12 @@ class FileTransferManager
 
     FtpServer ftpServer;
 
+    /*!
+    * @brief Function to setup File transfer
+    * @return true, is setup was successful
+    */
+    bool begin();
+
     // ToDo: Maybe abstract this to setAuth(). This function can then internally set FTP or other protocol credentials in the future.
     /*!
     * @brief Sets the FTP server credentials

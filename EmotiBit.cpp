@@ -1000,8 +1000,6 @@ uint8_t EmotiBit::setup(String firmwareVariant)
   	_fileTransferManager.setProtocol(FileTransferManager::Protocol::FTP);
   	Serial.println("Setting Auth");
   	_fileTransferManager.setFtpAuth("ftp", "ftp");
-  	Serial.println("Setting Mode");
-  	_fileTransferManager.setMode(FileTransferManager::Mode::FILE_TRANSFER);
 
 	setPowerMode(PowerMode::NORMAL_POWER);
 	typeTags[(uint8_t)EmotiBit::DataType::EDA] = EmotiBitPacket::TypeTag::EDA;
@@ -1667,9 +1665,13 @@ uint8_t EmotiBit::update()
 					led.setLED(uint8_t(EmotiBit::Led::RED), false);
 					led.setLED(uint8_t(EmotiBit::Led::BLUE), false);
 					led.setLED(uint8_t(EmotiBit::Led::YELLOW), false);
-					led.send();
+					led.send();					
+					_fileTransferManager.begin();
 					// ToDo: Consider is this should be implemented outside the #ifdef block. Should FileTransferManager handle the MCU specific stuff?
-					_fileTransferManager.handleTransfer();
+					while(1)
+					{
+						_fileTransferManager.handleTransfer();
+					}
 				}
 				else
 				{
