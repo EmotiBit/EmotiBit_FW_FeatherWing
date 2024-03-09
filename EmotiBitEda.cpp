@@ -156,6 +156,7 @@ bool EmotiBitEda::stageCalibStorage(EmotiBitNvmController * nvmController, Strin
 				EmotiBitEdaCalibration::print(rawVals);
 
 				Serial.println("Staging to write...");
+				if(nvmController == nullptr) return false;
 				uint8_t status = nvmController->stageToWrite(EmotiBitNvmController::DataType::EDA, dataVersion, sizeof(EmotiBitEdaCalibration::RawValues_V2), (uint8_t *)(&rawVals), autoSync);
 
 				if (status == (uint8_t)EmotiBitNvmController::Status::SUCCESS)
@@ -196,6 +197,7 @@ bool EmotiBitEda::stageCalibLoad(EmotiBitNvmController * nvmController, bool aut
 	uint8_t dataVersion;
 	uint32_t dataSize;
 	uint8_t* data = nullptr;
+	if(nvmController == nullptr) return false;
 	uint8_t status = nvmController->stageToRead(EmotiBitNvmController::DataType::EDA, dataVersion, dataSize, data, autoSync);
 
 	if (status != (uint8_t)EmotiBitNvmController::Status::SUCCESS || dataSize == 0)
@@ -259,6 +261,7 @@ uint8_t EmotiBitEda::readData()
 
 	if (_emotibitVersion >= EmotiBitVersionController::EmotiBitVersion::V04A)
 	{
+		if(_edlOversampBuffer == nullptr || _edlBuffer == nullptr) return 16; // BufferFloat::ERROR_PTR_NULL = 16. But, any non-zero value sohuld work.
 		// Code to debug missed conversions
 		//static uint16_t completed = 0;
 		//static uint16_t total = 0;
@@ -309,7 +312,7 @@ uint8_t EmotiBitEda::readData()
 	else
 	{
 		// Reads EDA data from ADC
-
+		if(_edlOversampBuffer == nullptr || _edrOversampBuffer == nullptr || _edlBuffer == nullptr || _edrBuffer == nullptr) return 16; // BufferFloat::ERROR_PTR_NULL = 16. But, any non-zero value sohuld work.
 		// Check EDL and EDR voltages for saturation
 #if defined(ARDUINO_FEATHER_ESP32)
 		// analogReadMillis is much more accurate for ESP
@@ -356,6 +359,7 @@ bool EmotiBitEda::processData()
 {
 	if (_emotibitVersion >= EmotiBitVersionController::EmotiBitVersion::V04A)
 	{
+		if(_edlBuffer == nullptr || _edaBuffer == nullptr) return false;
 		size_t n;
 		float * edlData;
 		float edaTemp;
@@ -385,6 +389,7 @@ bool EmotiBitEda::processData()
 	}
 	else
 	{
+		if(_edlBuffer == nullptr || _edrBuffer == nullptr || _edaBuffer == nullptr) return false;
 		size_t n, edlN, edrN;
 		float *edlData, *edrData;
 		uint32_t edlTs, edrTs;
@@ -522,6 +527,7 @@ bool EmotiBitEda::processData()
 
 bool EmotiBitEda::writeInfoJson(File &jsonFile)
 {
+	if(_edlOversampBuffer == nullptr) return false;
 	const uint16_t bufferSize = 1024;
 	{
 		// Parse the root object
@@ -639,6 +645,7 @@ void EmotiBitEda::setAdcIsrOffsetCorr(float isrOffsetCorr)
 
 void EmotiBitEda::processElectrodermalResponse(EmotiBit* emotibit)
 {
+	if(_edaBuffer == nullptr || emotibit == nullptr) return;
 	static const float samplingFrequency = _constants.samplingRate;
 	static const float timePeriod = 1.f / samplingFrequency; // in secs
 	static const float scrFreqTimePeriod = _constants.EDA_SAMPLES_PER_SCR_FREQ_OUTPUT  * timePeriod; // timePeriod of the signal scr:FREQ
