@@ -52,7 +52,7 @@ public:
 
 
 
-  String firmware_version = "1.9.0.feat-sdCardWiFiCredentials.16.feat-FtpServer.1.fix-emotibitEda.1.feat-2Core.3";
+  String firmware_version = "1.9.0.feat-sdCardWiFiCredentials.16.feat-FtpServer.1.fix-emotibitEda.1.feat-2Core.3.dev.0";
 
 
 

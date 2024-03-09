@@ -1659,6 +1659,7 @@ uint8_t EmotiBit::update()
 				{
 					// Stop ISR
 					//timerStop(timer);
+					// Stop the acquisition task
 					vTaskSuspend(EmotiBitDataAcquisition);
 					// turn OFF leds
 					// ToDo: Move this out of the #ifdef block. This behavior should be consistant across all Feathers.
@@ -1668,9 +1669,15 @@ uint8_t EmotiBit::update()
 					led.send();					
 					_fileTransferManager.begin();
 					// ToDo: Consider is this should be implemented outside the #ifdef block. Should FileTransferManager handle the MCU specific stuff?
+					uint32_t lastTaskDelay = millis();
 					while(1)
 					{
 						_fileTransferManager.handleTransfer();
+						if(millis() - lastTaskDelay > 500)
+						{
+							lastTaskDelay = millis();
+							vTaskDelay(pdMS_TO_TICKS(10));
+						}
 					}
 				}
 				else
