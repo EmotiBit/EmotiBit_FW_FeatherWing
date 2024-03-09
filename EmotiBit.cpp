@@ -1661,6 +1661,7 @@ uint8_t EmotiBit::update()
 				{
 					// Stop ISR
 					//timerStop(timer);
+					vTaskSuspend(EmotiBitDataAcquisition);
 					// turn OFF leds
 					// ToDo: Move this out of the #ifdef block. This behavior should be consistant across all Feathers.
 					led.setLED(uint8_t(EmotiBit::Led::RED), false);
