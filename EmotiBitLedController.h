@@ -18,6 +18,7 @@
 #include <Arduino.h>
 #include "EmotiBitVersionController.h"
 #include "EmotiBit_NCP5623.h"
+#include "KTD2026.h"
 
 class EmotiBitLedController
 {
@@ -57,8 +58,25 @@ public:
         uint8_t driverCurrent = 1;
         uint8_t pwmVal = 8;
     } settingsNCP5623;
-    
-    NCP5623 ncp5623;
+
+    /*!
+        @brief Map EmotiBit LEDs to KTD2026 channels. Refer hardware schematic for mapping.
+    */
+    const KTD2026::Channel ledToKtdMap[Led::length] =
+                                    {
+                                        KTD2026::Channel::CH1, // RED
+                                        KTD2026::Channel::CH2, // BLUE
+                                        KTD2026::Channel::CH3  // YELLOW
+                                    };
+
+    struct SettingsKTD2026{
+        // ToDo: consider if we want 3 iOut settings, 1 for each channel. 
+        //Since each channel has a different LED color, different currents may be required to produce same luminosity.
+        uint8_t iOut = 0x10;  // setting current to 2mA. value = 2mA/24mA * 192 steps = 16 steps = 0x10
+    }settingsKTD2026;
+
+    NCP5623 ncp5623; //<! instance of NCP5623
+    KTD2026* ktd2026b = new KTD2026();  //<! instance of KTD2026
 
 public:
 
@@ -93,11 +111,38 @@ public:
     */
     bool update();
 
+    /*!
+        @brief Set HW version in the LedController class
+        @param version EmotiBit HW version
+        @return True is set successfully, else false
+    */
+    bool setHwVersion(EmotiBitVersionController::EmotiBitVersion version)
+    {
+        _hwVersion = version;
+        return true;
+    }
+
+    /*!
+        @brief Get the HW version set in the LedController class
+        @return HW version
+    */
+    EmotiBitVersionController::EmotiBitVersion getHeWVersion()
+    {
+        return _hwVersion;
+    }
+
 private:
     /*!
      * @brief Function to communicate with the NCP5623 driver
      * @return true if successful, else false
     */
     bool _updateNcp();
+
+    /*!
+        @brief Function to communicate with the KTD2026 driver
+        @return True if successful, else false
+    */
+    bool _updateKtd2026();
+    EmotiBitVersionController::EmotiBitVersion _hwVersion;
 };
 #endif

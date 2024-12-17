@@ -14,7 +14,6 @@ EmotiBitVersionController emotiBitVersionController;
 EmotiBitLedController emotibitLedController;
 TwoWire* _EmotiBit_i2c = nullptr;
 uint32_t i2cRate = 100000;
-int forceHwVersion = -1;
 EmotiBitVersionController::EmotiBitVersion hwVersion = EmotiBitVersionController::EmotiBitVersion::UNKNOWN;
 EmotiBitNvmController emotibitNvmController;
 String emotiBitSku, emotibitDeviceId;

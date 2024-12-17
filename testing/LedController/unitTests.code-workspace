@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "test_ktd2026getterSetter"
+		},
+		{
+			"path": "test_ktdEvalBoard"
+		},
+		{
+			"path": "test_emotiBitLedSequence"
+		},
+		{
+			"path": "test_factoryTestPrompt"
+		}
+	],
+	"settings": {}
+}

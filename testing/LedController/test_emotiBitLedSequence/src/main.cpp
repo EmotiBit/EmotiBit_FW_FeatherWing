@@ -86,7 +86,7 @@ void setup()
   // chance to override version
   uint32_t timeSinceWait = millis();
   Serial.println("To override auto version detection, choose a version below. Press 0 to continue");
-  Serial.println("3. V3\n4. V4\n5. V5\n6. V6");
+  Serial.println("3. V3\n4. V4\n5. V5\n6. V6\n7. V7");
   while(!Serial.available())
   {
     delay(1000);
@@ -96,31 +96,28 @@ void setup()
   {
     String input = Serial.readString();
     forceHwVersion = input.toInt();
-    if(forceHwVersion == 0)
+    switch(forceHwVersion)
     {
-      // do nothing
-    }
-    else if(forceHwVersion == 6)
-    {
-      hwVersion = EmotiBitVersionController::EmotiBitVersion::V06A;
-    }
-    else if (forceHwVersion == 5)
-    {
-      hwVersion = EmotiBitVersionController::EmotiBitVersion::V05C;
-    }
-    else if (forceHwVersion == 4)
-    {
-      // ToDo: consider if we even need older EmotiBit versions
-      hwVersion = EmotiBitVersionController::EmotiBitVersion::V04A;
-    }
-    else if (forceHwVersion == 3)
-    {
-      hwVersion = EmotiBitVersionController::EmotiBitVersion::V03B;
-    }
-    else
-    {
-      Serial.println("Invalid input. Reset and start again");
-      while(1);
+      case 0:
+        break;
+      case 7:
+        hwVersion = EmotiBitVersionController::EmotiBitVersion::V07A;
+        break;
+      case 6:
+        hwVersion = EmotiBitVersionController::EmotiBitVersion::V06A;
+        break;
+      case 5:
+        hwVersion = EmotiBitVersionController::EmotiBitVersion::V05C;
+        break;
+      case 4:
+        hwVersion = EmotiBitVersionController::EmotiBitVersion::V04A;
+        break;
+      case 3:
+        hwVersion = EmotiBitVersionController::EmotiBitVersion::V03B;
+        break;
+      default:
+        Serial.println("Invalid input. Reset and start again");
+        while(1);
     }
     if(forceHwVersion)
     {
